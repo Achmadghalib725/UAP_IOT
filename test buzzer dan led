@@ -1,0 +1,43 @@
+/*
+ * KODE TES DASAR - HANYA LED DAN BUZZER
+ * Deskripsi:
+ * Kode ini digunakan untuk memeriksa apakah rangkaian LED dan Buzzer sudah benar.
+ * LED dan Buzzer akan menyala dan mati bersamaan setiap satu detik.
+ * Sensor HC-SR04 tidak digunakan dalam tes ini.
+ */
+
+// Mendefinisikan pin yang digunakan
+#define BUZZER_PIN D1
+#define LED_PIN    D2
+
+void setup() {
+  // Mengatur mode pin sebagai OUTPUT (keluaran sinyal)
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  
+  // Memulai Serial Monitor untuk memberi pesan bahwa tes dimulai
+  Serial.begin(9600);
+  Serial.println("Tes LED dan Buzzer dimulai...");
+}
+
+void loop() {
+  // --- SIKLUS NYALA ---
+  Serial.println("Status: ON");
+  
+  // Menyalakan LED dan Buzzer dengan memberikan sinyal HIGH
+  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(BUZZER_PIN, HIGH);
+  
+  // Beri jeda selama 1000 milidetik (1 detik)
+  delay(1000);
+
+  // --- SIKLUS MATI ---
+  Serial.println("Status: OFF");
+  
+  // Mematikan LED dan Buzzer dengan memberikan sinyal LOW
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  // Beri jeda selama 1000 milidetik (1 detik)
+  delay(1000);
+}
