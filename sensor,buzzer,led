@@ -1,0 +1,84 @@
+/*
+ * Proyek Sensor Parkir - VERSI SINKRON 1 LED + BUZZER
+ * Deskripsi:
+ * Menggunakan 1 LED Merah dan 1 Buzzer. Kedipan LED dan bunyi beep
+ * akan sinkron dan semakin cepat saat objek mendekat dalam rentang 5-50 cm.
+ */
+
+// === PIN DEFINITIONS ===
+#define BUZZER_PIN D1
+#define LED_PIN    D2  // Hanya satu pin untuk LED Merah
+#define TRIG_PIN   D5
+#define ECHO_PIN   D6
+
+// === GLOBAL VARIABLES ===
+long duration;
+int distance;
+
+// === HELPER FUNCTION ===
+// Fungsi ini akan menyalakan LED dan Buzzer secara bersamaan (Aksi "Beep & Blink")
+void aksiSensor(int jeda) {
+  // Nyalakan LED dan Buzzer
+  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(100); // Durasi nyala/beep
+
+  // Matikan LED dan Buzzer
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+  delay(jeda); // Jeda antar nyala/beep, nilainya bervariasi
+}
+
+// === MAIN PROGRAM ===
+void setup() {
+  // Mengatur mode pin untuk output
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  // Mengatur mode pin untuk input
+  pinMode(ECHO_PIN, INPUT);
+  
+  // Memulai komunikasi serial
+  Serial.begin(9600); 
+  Serial.println("Sensor Siap! (1 LED + Buzzer Sinkron)");
+}
+
+void loop() {
+  // 1. Memicu sensor
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // 2. Membaca waktu pantulan
+  duration = pulseIn(ECHO_PIN, HIGH);
+
+  // 3. Menghitung jarak
+  distance = duration * 0.034 / 2;
+
+  // 4. Menampilkan informasi ke Serial Monitor
+  Serial.print("Jarak: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // 5. KONTROL BUZZER DAN LED BERDASARKAN JARAK (Logika Linear)
+  if (distance < 5 && distance > 0) {
+    // ZONA SANGAT DEKAT: Nyala/bunyi terus menerus
+    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(BUZZER_PIN, HIGH);
+    
+  } else if (distance >= 5 && distance <= 50) {
+    // ZONA WASPADA: Kecepatan bervariasi tergantung jarak
+    // Petakan jarak 50cm (jauh) -> 5cm (dekat) ke jeda 700ms (lambat) -> 50ms (cepat)
+    int jeda = map(distance, 5, 50, 50, 700);
+    aksiSensor(jeda); // Panggil fungsi untuk beep & blink
+    
+  } else {
+    // ZONA AMAN: Semuanya mati
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(200); 
+  }
+}
