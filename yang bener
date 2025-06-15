@@ -1,0 +1,93 @@
+#define BLYNK_TEMPLATE_ID "TMPL62fj0VpuV"
+#define BLYNK_TEMPLATE_NAME "Sensor Parkir"
+#define BLYNK_AUTH_TOKEN "vAVwtqaHre8FHs1kn9_4-iykvevO4QIm"
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+char ssid[] = "🔥bzett bzett🔥";
+char pass[] = "maubuatapa";
+
+// PIN Ultrasonik dan Aktuator
+#define TRIG_PIN D5
+#define ECHO_PIN D6
+#define LED_PIN D2
+#define BUZZER_PIN D1
+
+long duration;
+int distance;
+
+BlynkTimer timer;
+
+// Fungsi beep dan blink sinkron
+void aksiSensor(int jeda) {
+  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+  delay(jeda);
+}
+
+// Fungsi utama untuk membaca jarak dan kirim ke Blynk
+void bacaSensor() {
+  // Trigger sensor
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Baca durasi dan hitung jarak
+  duration = pulseIn(ECHO_PIN, HIGH);
+  distance = duration * 0.034 / 2;
+
+  Serial.print("Jarak: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // Kirim jarak ke Blynk (V0)
+  Blynk.virtualWrite(V0, distance);
+
+  // Logika berdasarkan zona jarak
+  if (distance <= 10 && distance > 0) {
+    aksiSensor(50); // Sangat cepat
+    Blynk.virtualWrite(V1, "Bahaya! (<10cm)");
+  } else if (distance > 10 && distance <= 30) {
+    aksiSensor(150); // Cukup cepat
+    Blynk.virtualWrite(V1, "Dekat (11-30cm)");
+  } else if (distance > 30 && distance <= 50) {
+    aksiSensor(300); // Medium
+    Blynk.virtualWrite(V1, "Sedang (31-50cm)");
+  } else if (distance > 50 && distance <= 70) {
+    aksiSensor(500); // Agak lambat
+    Blynk.virtualWrite(V1, "Agak Jauh (51-70cm)");
+  } else if (distance > 70 && distance <= 100) {
+    aksiSensor(700); // Lambat
+    Blynk.virtualWrite(V1, "Jauh (71-100cm)");
+  } else {
+    // Di luar jangkauan: matikan LED dan buzzer
+    digitalWrite(LED_PIN, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    Blynk.virtualWrite(V1, "Aman (>100cm)");
+    delay(200);
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  timer.setInterval(50L, bacaSensor); // Baca setiap 1 detik
+}
+
+void loop() {
+  Blynk.run();
+  timer.run();
+}
